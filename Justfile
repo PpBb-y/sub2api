@@ -101,16 +101,10 @@ dev-react:
 build-react:
     pixi run pnpm run build
 
-# Pre-commit check for React frontend (lint + typecheck, no build)
-[working-directory('frontend-react')]
-precommit-react:
-    pixi run pnpm run lint
-    pixi run pnpm exec tsc --noEmit
-
-# Format React frontend code (if Prettier is configured in the future)
+# Format React frontend code with Oxfmt
 [working-directory('frontend-react')]
 fmt-react:
-    @echo "No formatter configured for React frontend yet. Consider adding Prettier."
+    pixi run pnpm exec oxfmt --write .
 
 # ── Build ───────────────────────────────────────
 
@@ -162,11 +156,11 @@ check-vue:
     pixi run pnpm run lint:check
     pixi run pnpm run typecheck
 
-# React frontend code quality check (lint + build, no actual tests)
+# React frontend code quality check (lint + typecheck, no actual tests)
 [working-directory('frontend-react')]
 check-react:
     pixi run pnpm run lint
-    pixi run pnpm run build
+    pixi run pnpm exec tsc --noEmit
 
 # Format Go code
 [working-directory('backend')]

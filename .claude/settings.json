@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "just fmt-react 2>&1 | tail -5"
+          },
+          {
+            "type": "command",
+            "command": "just check-react 2>&1 | tail -20"
+          }
+        ]
+      }
+    ]
+  }
+}

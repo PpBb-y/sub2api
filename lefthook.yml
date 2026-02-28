@@ -4,22 +4,12 @@
 pre-commit:
   parallel: true
   commands:
-    # Frontend React - Lint
-    frontend-react-lint:
+    # Frontend React: lint + typecheck
+    frontend-react-check:
       glob: "frontend-react/**/*.{ts,tsx}"
-      run: cd frontend-react && pnpm run lint
+      run: just check-react
 
-    # Frontend React - Type check
-    frontend-react-typecheck:
-      glob: "frontend-react/**/*.{ts,tsx}"
-      run: cd frontend-react && pnpm exec tsc --noEmit
-
-    # Backend Go - Format check
-    backend-go-fmt-check:
+    # Backend Go: format check + lint
+    backend-go:
       glob: "backend/**/*.go"
-      run: cd backend && test -z "$(pixi run gofmt -l .)" || (echo "Go files are not formatted. Run 'just fmt-go' to fix." && exit 1)
-
-    # Backend Go - Lint
-    backend-go-lint:
-      glob: "backend/**/*.go"
-      run: cd backend && pixi run golangci-lint run
+      run: just precommit-go
