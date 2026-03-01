@@ -21,9 +21,12 @@ default:
 
 # ── Setup ─────────────────────────────────────
 
-# Install all project dependencies (pixi + frontend)
+# Install all project dependencies (pixi + frontend + Go tools)
 setup:
     pixi install
+    cd frontend-react && pixi run pnpm install
+    pixi run go install golang.org/x/tools/gopls@latest
+    pixi run go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 # ── Development Database ────────────────────────
 
@@ -179,6 +182,10 @@ precommit-go:
     pixi run golangci-lint run
 
 # ── Git & Collaboration ──────────────────────────
+
+# Quality check on changed files (used by Claude Code stop hook)
+quality-check:
+    sh scripts/quality-check.sh
 
 # Create PR to upstream (VIDLG/sub2api) from current branch
 pr-upstream title body:

@@ -1,7 +1,11 @@
-version: "2"
+# Target Go version for linting (must match golangci-lint's build version)
+# Project uses Go 1.25.7 (go.mod), but golangci-lint is built with Go 1.23.6
+# Setting to 1.23 to avoid version mismatch errors
+run:
+  go: "1.23"
 
 linters:
-  default: none
+  disable-all: true
   enable:
     - depguard
     - errcheck

@@ -1,4 +1,4 @@
-分析当前 git 变更并创建 commit。参数：$ARGUMENTS
+分析当前 git 变更并创建 commit（不推送到远程）。
 
 ## 步骤
 
@@ -16,12 +16,10 @@
 3. 对每个 commit：
    - 用 `git add <具体文件>` 只暂存相关文件，不用 `git add -A` 或 `git add .`
    - 撰写简洁的 commit message（祈使句，72 字符以内，说明"为什么"而非"做了什么"）
-   - commit body 附加 `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`
+   - commit body 附加 `Co-Authored-By: Claude <model> <noreply@anthropic.com>`（根据当前实际模型填写，如 Opus 4.6、Sonnet 4.6、Haiku 4.5）
    - 用 HEREDOC 传入 message
 
-4. 若 `$ARGUMENTS` 包含 `push`，在所有 commit 完成后执行 `git push`。
-
-5. 最后运行 `git status` 确认工作区干净。
+4. 最后运行 `git status` 确认工作区干净。
 
 ## 约束
 
@@ -30,3 +28,9 @@
 - 禁止 amend 已有 commit
 - 禁止 force push
 - 若 pre-commit hook 失败，修复问题后用新 commit 重试
+
+## 使用场景
+
+- 日常开发提交（本地 commit）
+- 需要智能拆分多个 commit
+- 想先 review 再 push

@@ -1,6 +1,19 @@
 {
   // rust-analyzer needs a Cargo.toml to resolve dependencies for rust-script files
-  "rust-analyzer.linkedProjects": [
-    "scripts/Cargo.toml"
-  ]
+  "rust-analyzer.linkedProjects": ["scripts/Cargo.toml"],
+
+  // 使用 PostCSS 语言模式来正确识别 Tailwind CSS v4 语法
+  "files.associations": {
+    "**/frontend-react/src/**/*.css": "postcss"
+  },
+
+  // Tailwind CSS IntelliSense 配置
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  }
 }
