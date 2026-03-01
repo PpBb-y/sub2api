@@ -118,6 +118,7 @@ export default function RedeemView() {
   const [showGenerateDialog, setShowGenerateDialog] = useState(false)
   const [showResultDialog, setShowResultDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showDeleteUnusedDialog, setShowDeleteUnusedDialog] = useState(false)
   const [selectedCode, setSelectedCode] = useState<RedeemCode | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -144,10 +145,32 @@ export default function RedeemView() {
     onSuccess: () => {
       showSuccess(t('Redeem code deleted'))
       setShowDeleteDialog(false)
-      setSelectedCode(null)
     },
     onError: (err) => {
       showError(extractErrorMessage(err, t('Failed to delete code')))
+    },
+  })
+
+  const deleteAllUnusedMutation = useTableMutation({
+    mutationFn: async (_: undefined) => {
+      // Fetch all unused IDs (backend export uses 10000 as practical upper limit)
+      const res = await adminAPI.redeem.list(1, 10000, { status: 'unused' })
+      const ids = res.items.map((c) => c.id)
+      if (ids.length === 0) return { deleted: 0, message: 'No unused codes' }
+      return adminAPI.redeem.batchDelete(ids)
+    },
+    queryKey: REDEEM_QUERY_KEY,
+    onSuccess: (data) => {
+      const result = data as { deleted: number; message: string }
+      if (result.deleted === 0) {
+        showSuccess(t('No unused codes to delete'))
+      } else {
+        showSuccess(t('Deleted') + ` ${result.deleted} ` + t('codes'))
+      }
+      setShowDeleteUnusedDialog(false)
+    },
+    onError: (err) => {
+      showError(extractErrorMessage(err, t('Failed to delete unused codes')))
     },
   })
 
@@ -277,12 +300,25 @@ export default function RedeemView() {
     {
       accessorKey: 'value',
       header: () => t('Value'),
-      size: 100,
-      cell: ({ row }) => (
-        <span className="text-gray-700 dark:text-gray-300">
-          {row.original.type === 'balance' ? `$${row.original.value}` : row.original.value}
-        </span>
-      ),
+      size: 150,
+      cell: ({ row }) => {
+        const { type, value } = row.original
+        if (type === 'balance') {
+          return <span className="text-gray-700 dark:text-gray-300">${value.toFixed(2)}</span>
+        }
+        if (type === 'subscription') {
+          const groupName = row.original.group?.name
+          return (
+            <span className="text-gray-700 dark:text-gray-300">
+              {row.original.validity_days || 30} {t('days')}
+              {groupName && (
+                <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">({groupName})</span>
+              )}
+            </span>
+          )
+        }
+        return <span className="text-gray-700 dark:text-gray-300">{value}</span>
+      },
     },
     {
       accessorKey: 'status',
@@ -323,17 +359,21 @@ export default function RedeemView() {
       size: 80,
       cell: ({ row }) => (
         <div className="flex items-center justify-end">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSelectedCode(row.original)
-              setShowDeleteDialog(true)
-            }}
-            className="text-red-500 hover:text-red-700 p-1 h-auto"
-            title={t('Delete')}
-          >
-            <TrashIcon className="h-4 w-4" />
-          </Button>
+          {row.original.status === 'unused' ? (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setSelectedCode(row.original)
+                setShowDeleteDialog(true)
+              }}
+              className="text-red-500 hover:text-red-700 p-1 h-auto"
+              title={t('Delete')}
+            >
+              <TrashIcon className="h-4 w-4" />
+            </Button>
+          ) : (
+            <span className="text-gray-400">-</span>
+          )}
         </div>
       ),
     },
@@ -343,12 +383,50 @@ export default function RedeemView() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Filters & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-          {t('Redeem Code Management')}
-          <span className="ml-2 text-sm font-normal text-gray-500">({pagination?.total ?? 0})</span>
-        </h1>
+        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
+          <div className="relative flex-1 min-w-[200px]">
+            <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('Search codes or email...')}
+              className="pl-9"
+            />
+          </div>
+          <Select
+            value={filters.type ?? 'all'}
+            onValueChange={(v) => setFilter('type', v === 'all' ? undefined : v)}
+          >
+            <SelectTrigger className="w-auto">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              <SelectItem value="all">{t('All Types')}</SelectItem>
+              <SelectItem value="balance">{t('Balance')}</SelectItem>
+              <SelectItem value="concurrency">{t('Concurrency')}</SelectItem>
+              <SelectItem value="subscription">{t('Subscription')}</SelectItem>
+              <SelectItem value="invitation">{t('Invitation')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters.status ?? 'all'}
+            onValueChange={(v) => setFilter('status', v === 'all' ? undefined : v)}
+          >
+            <SelectTrigger className="w-auto">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              <SelectItem value="all">{t('All Status')}</SelectItem>
+              <SelectItem value="active">{t('Active')}</SelectItem>
+              <SelectItem value="unused">{t('Unused')}</SelectItem>
+              <SelectItem value="used">{t('Used')}</SelectItem>
+              <SelectItem value="expired">{t('Expired')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -375,51 +453,6 @@ export default function RedeemView() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="card p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px]">
-            <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('Search codes...')}
-              className="pl-9"
-            />
-          </div>
-          <Select
-            value={filters.type ?? 'all'}
-            onValueChange={(v) => setFilter('type', v === 'all' ? undefined : v)}
-          >
-            <SelectTrigger className="w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="all">{t('All Types')}</SelectItem>
-              <SelectItem value="balance">{t('Balance')}</SelectItem>
-              <SelectItem value="concurrency">{t('Concurrency')}</SelectItem>
-              <SelectItem value="subscription">{t('Subscription')}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.status ?? 'all'}
-            onValueChange={(v) => setFilter('status', v === 'all' ? undefined : v)}
-          >
-            <SelectTrigger className="w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="all">{t('All Status')}</SelectItem>
-              <SelectItem value="active">{t('Active')}</SelectItem>
-              <SelectItem value="unused">{t('Unused')}</SelectItem>
-              <SelectItem value="used">{t('Used')}</SelectItem>
-              <SelectItem value="expired">{t('Expired')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       {/* Table */}
       <DataTable
         columns={columns}
@@ -428,6 +461,42 @@ export default function RedeemView() {
         pagination={pagination}
         onPageChange={setPage}
       />
+
+      {/* Batch Actions - show when filtering by unused */}
+      {filters.status === 'unused' && (
+        <div className="flex justify-end">
+          <Button
+            variant="destructive"
+            onClick={() => setShowDeleteUnusedDialog(true)}
+            className="flex items-center gap-1 text-sm"
+          >
+            <TrashIcon className="h-4 w-4" />
+            {t('Delete All Unused Codes')}
+          </Button>
+        </div>
+      )}
+
+      {/* Delete All Unused Confirmation */}
+      <AlertDialog open={showDeleteUnusedDialog} onOpenChange={setShowDeleteUnusedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('Delete All Unused Codes')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('Are you sure you want to delete all unused redeem codes? This action cannot be undone.')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteAllUnusedMutation.isPending}>{t('Cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteAllUnusedMutation.mutate(undefined)}
+              disabled={deleteAllUnusedMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteAllUnusedMutation.isPending ? <div className="spinner h-4 w-4" /> : t('Delete All')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Generate Codes Dialog */}
       <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
@@ -450,6 +519,7 @@ export default function RedeemView() {
                   <SelectItem value="balance">{t('Balance')}</SelectItem>
                   <SelectItem value="concurrency">{t('Concurrency')}</SelectItem>
                   <SelectItem value="subscription">{t('Subscription')}</SelectItem>
+                  <SelectItem value="invitation">{t('Invitation')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
