@@ -161,7 +161,7 @@ const profileRoute = createRoute({
 const subscriptionsRoute = createRoute({
   getParentRoute: () => authLayoutRoute,
   path: '/subscriptions',
-  staticData: { title: 'My Subscriptions', titleKey: 'userSubscriptions.title' },
+  staticData: { title: 'Subscriptions', titleKey: 'userSubscriptions.title' },
   component: lazyRouteComponent(() => import('@/views/user/SubscriptionsView')),
 })
 

@@ -283,7 +283,7 @@ export default {
     expand: 'Expand',
     logout: 'Logout',
     github: 'GitHub',
-    mySubscriptions: 'My Subscriptions',
+    mySubscriptions: 'Subscriptions',
     buySubscription: 'Purchase Subscription',
     docs: 'Docs',
   },
@@ -3745,7 +3745,7 @@ export default {
 
   // Subscription Progress (Header component)
   subscriptionProgress: {
-    title: 'My Subscriptions',
+    title: 'Subscriptions',
     viewDetails: 'View subscription details',
     activeCount: '{count} active subscription(s)',
     daily: 'Daily',
@@ -3822,7 +3822,7 @@ export default {
 
   // User Subscriptions Page
   userSubscriptions: {
-    title: 'My Subscriptions',
+    title: 'Subscriptions',
     description: 'View your subscription plans and usage',
     noActiveSubscriptions: 'No Active Subscriptions',
     noActiveSubscriptionsDesc:

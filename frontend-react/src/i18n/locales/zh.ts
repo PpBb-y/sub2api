@@ -279,7 +279,7 @@ export default {
     expand: '展开',
     logout: '退出登录',
     github: 'GitHub',
-    mySubscriptions: '我的订阅',
+    mySubscriptions: '订阅',
     buySubscription: '购买订阅',
     docs: '文档',
   },
@@ -3844,7 +3844,7 @@ export default {
 
   // Subscription Progress (Header component)
   subscriptionProgress: {
-    title: '我的订阅',
+    title: '订阅',
     viewDetails: '查看订阅详情',
     activeCount: '{count} 个有效订阅',
     daily: '每日',
@@ -3920,7 +3920,7 @@ export default {
 
   // User Subscriptions Page
   userSubscriptions: {
-    title: '我的订阅',
+    title: '订阅',
     description: '查看您的订阅计划和用量',
     noActiveSubscriptions: '暂无有效订阅',
     noActiveSubscriptionsDesc: '您没有任何有效订阅。请联系管理员获取订阅。',
