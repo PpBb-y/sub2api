@@ -388,41 +388,9 @@ export default function SubscriptionsView() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Filters & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-          {t('Subscription Management')}
-          <span className="ml-2 text-sm font-normal text-gray-500">({pagination?.total ?? 0})</span>
-        </h1>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={refresh} title={t('Refresh')}>
-            <RefreshIcon className="h-4 w-4" />
-          </Button>
-          <ColumnSettings
-            columns={columnSettingItems}
-            columnOrder={columnOrder}
-            onColumnOrderChange={setColumnOrder}
-            onVisibilityChange={setColumnVisibility}
-            onReset={resetColumnSettings}
-          />
-          <Button
-            onClick={() => {
-              setAssignForm({ user_id: 0, group_id: 0, validity_days: 30 })
-              setUserSearch('')
-              setUserResults([])
-              setShowAssignDialog(true)
-            }}
-            className="flex items-center gap-1"
-          >
-            <PlusIcon className="h-4 w-4" />
-            {t('Assign Subscription')}
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="card p-4">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
           <Select
             value={filters.status ?? 'all'}
             onValueChange={(v) => setFilter('status', v === 'all' ? undefined : v)}
@@ -453,6 +421,30 @@ export default function SubscriptionsView() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={refresh} title={t('Refresh')}>
+            <RefreshIcon className="h-4 w-4" />
+          </Button>
+          <ColumnSettings
+            columns={columnSettingItems}
+            columnOrder={columnOrder}
+            onColumnOrderChange={setColumnOrder}
+            onVisibilityChange={setColumnVisibility}
+            onReset={resetColumnSettings}
+          />
+          <Button
+            onClick={() => {
+              setAssignForm({ user_id: 0, group_id: 0, validity_days: 30 })
+              setUserSearch('')
+              setUserResults([])
+              setShowAssignDialog(true)
+            }}
+            className="flex items-center gap-1"
+          >
+            <PlusIcon className="h-4 w-4" />
+            {t('Assign Subscription')}
+          </Button>
         </div>
       </div>
 

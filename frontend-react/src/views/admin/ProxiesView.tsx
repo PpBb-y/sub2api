@@ -567,13 +567,49 @@ export default function ProxiesView() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="page-title">{t('admin.proxies.title', 'Proxies')}</h1>
-          <p className="page-description">
-            {t('admin.proxies.description', 'Manage proxy servers')}
-          </p>
+      {/* Filters & Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
+          <div className="relative flex-1 min-w-[200px]">
+            <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('admin.proxies.searchPlaceholder', 'Search by name or host...')}
+              className="pl-9 text-sm"
+            />
+          </div>
+          <Select
+            value={filters.protocol ?? 'all'}
+            onValueChange={(v) => setFilter('protocol', v === 'all' ? undefined : v)}
+          >
+            <SelectTrigger className="w-auto text-sm">
+              <SelectValue placeholder={t('admin.proxies.allProtocols', 'All Protocols')} />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              <SelectItem value="all">
+                {t('admin.proxies.allProtocols', 'All Protocols')}
+              </SelectItem>
+              {PROTOCOLS.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  {p.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters.status ?? 'all'}
+            onValueChange={(v) => setFilter('status', v === 'all' ? undefined : v)}
+          >
+            <SelectTrigger className="w-auto text-sm">
+              <SelectValue placeholder={t('admin.proxies.allStatuses', 'All Statuses')} />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              <SelectItem value="all">{t('admin.proxies.allStatuses', 'All Statuses')}</SelectItem>
+              <SelectItem value="active">{t('common.active', 'Active')}</SelectItem>
+              <SelectItem value="inactive">{t('common.inactive', 'Inactive')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-2">
           {selectedCount > 0 && (
@@ -610,52 +646,6 @@ export default function ProxiesView() {
             <PlusIcon className="h-4 w-4" />
             {t('common.create', 'Create')}
           </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="card p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Select
-            value={filters.protocol ?? 'all'}
-            onValueChange={(v) => setFilter('protocol', v === 'all' ? undefined : v)}
-          >
-            <SelectTrigger className="w-auto text-sm">
-              <SelectValue placeholder={t('admin.proxies.allProtocols', 'All Protocols')} />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="all">
-                {t('admin.proxies.allProtocols', 'All Protocols')}
-              </SelectItem>
-              {PROTOCOLS.map((p) => (
-                <SelectItem key={p.value} value={p.value}>
-                  {p.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.status ?? 'all'}
-            onValueChange={(v) => setFilter('status', v === 'all' ? undefined : v)}
-          >
-            <SelectTrigger className="w-auto text-sm">
-              <SelectValue placeholder={t('admin.proxies.allStatuses', 'All Statuses')} />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="all">{t('admin.proxies.allStatuses', 'All Statuses')}</SelectItem>
-              <SelectItem value="active">{t('common.active', 'Active')}</SelectItem>
-              <SelectItem value="inactive">{t('common.inactive', 'Inactive')}</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="relative flex-1 min-w-[200px]">
-            <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('admin.proxies.searchPlaceholder', 'Search by name or host...')}
-              className="pl-9 text-sm"
-            />
-          </div>
         </div>
       </div>
 
