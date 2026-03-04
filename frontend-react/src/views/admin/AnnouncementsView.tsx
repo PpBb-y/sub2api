@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTable, ColumnSettings } from '@/components/data-table'
+import { DevTools } from '@/components/dev/DevTools'
 import { useDataTableQuery, useTableMutation, extractErrorMessage, type ColumnMeta } from '@/hooks/useDataTableQuery'
 
 // ==================== Types ====================
@@ -376,16 +377,6 @@ export default function AnnouncementsView() {
               {t('common.delete', 'Delete')} ({selectedCount})
             </Button>
           )}
-          <Button variant="ghost" size="icon" onClick={refresh} title={t('Refresh')}>
-            <RefreshIcon className="h-4 w-4" />
-          </Button>
-          <ColumnSettings
-            columns={columnSettingItems}
-            columnOrder={columnOrder}
-            onColumnOrderChange={setColumnOrder}
-            onVisibilityChange={setColumnVisibility}
-            onReset={resetColumnSettings}
-          />
           <Button onClick={openCreate}>
             <PlusIcon className="mr-2 h-4 w-4" />
             {t('Create Announcement')}
@@ -410,6 +401,20 @@ export default function AnnouncementsView() {
         renderRowActions={renderRowActions}
         actionsColumnSize={120}
         spreadsheetTitle="Announcements"
+        toolbar={
+          <>
+            <Button variant="ghost" size="icon-xs" onClick={refresh} title={t('Refresh')}>
+              <RefreshIcon className="h-4 w-4" />
+            </Button>
+            <ColumnSettings
+              columns={columnSettingItems}
+              columnOrder={columnOrder}
+              onColumnOrderChange={setColumnOrder}
+              onVisibilityChange={setColumnVisibility}
+              onReset={resetColumnSettings}
+            />
+          </>
+        }
       />
 
       {/* Form Dialog (Create / Edit) */}
@@ -569,6 +574,8 @@ export default function AnnouncementsView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DevTools page="announcements" />
     </div>
   )
 }

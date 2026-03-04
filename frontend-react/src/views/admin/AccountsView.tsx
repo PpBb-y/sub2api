@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTable, ColumnSettings } from '@/components/data-table'
+import { DevTools } from '@/components/dev/DevTools'
 import { useDataTableQuery, useTableMutation, extractErrorMessage, type ColumnMeta } from '@/hooks/useDataTableQuery'
 
 // ==================== Constants ====================
@@ -572,21 +573,6 @@ export default function AccountsView() {
             </Button>
           )}
           <Button
-            variant="ghost"
-            size="icon"
-            onClick={refresh}
-            title={t('common.refresh', 'Refresh')}
-          >
-            <RefreshIcon className="h-4 w-4" />
-          </Button>
-          <ColumnSettings
-            columns={columnSettingItems}
-            columnOrder={columnOrder}
-            onColumnOrderChange={setColumnOrder}
-            onVisibilityChange={setColumnVisibility}
-            onReset={resetColumnSettings}
-          />
-          <Button
             onClick={() => {
               createForm.reset()
               setShowCreateDialog(true)
@@ -615,6 +601,20 @@ export default function AccountsView() {
         renderRowActions={renderRowActions}
         actionsColumnSize={200}
         spreadsheetTitle="Accounts"
+        toolbar={
+          <>
+            <Button variant="ghost" size="icon-xs" onClick={refresh} title={t('common.refresh', 'Refresh')}>
+              <RefreshIcon className="h-4 w-4" />
+            </Button>
+            <ColumnSettings
+              columns={columnSettingItems}
+              columnOrder={columnOrder}
+              onColumnOrderChange={setColumnOrder}
+              onVisibilityChange={setColumnVisibility}
+              onReset={resetColumnSettings}
+            />
+          </>
+        }
       />
 
       {/* Create Dialog */}
@@ -873,6 +873,8 @@ export default function AccountsView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DevTools page="accounts" />
     </div>
   )
 }

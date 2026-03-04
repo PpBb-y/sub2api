@@ -49,6 +49,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTable, ColumnSettings } from '@/components/data-table'
+import { DevTools } from '@/components/dev/DevTools'
 import { useDataTableQuery, useTableMutation, extractErrorMessage, type ColumnMeta } from '@/hooks/useDataTableQuery'
 
 // ==================== Types ====================
@@ -491,16 +492,6 @@ export default function PromoCodesView() {
               {t('Delete')} ({selectedCount})
             </Button>
           )}
-          <Button variant="ghost" size="icon" onClick={refresh} title={t('Refresh')}>
-            <RefreshIcon className="h-4 w-4" />
-          </Button>
-          <ColumnSettings
-            columns={columnSettingItems}
-            columnOrder={columnOrder}
-            onColumnOrderChange={setColumnOrder}
-            onVisibilityChange={setColumnVisibility}
-            onReset={resetColumnSettings}
-          />
           <Button onClick={openCreate}>
             <PlusIcon className="mr-2 h-4 w-4" />
             {t('Create Promo Code')}
@@ -525,6 +516,20 @@ export default function PromoCodesView() {
         renderRowActions={renderRowActions}
         actionsColumnSize={140}
         spreadsheetTitle="Promo Codes"
+        toolbar={
+          <>
+            <Button variant="ghost" size="icon-xs" onClick={refresh} title={t('Refresh')}>
+              <RefreshIcon className="h-4 w-4" />
+            </Button>
+            <ColumnSettings
+              columns={columnSettingItems}
+              columnOrder={columnOrder}
+              onColumnOrderChange={setColumnOrder}
+              onVisibilityChange={setColumnVisibility}
+              onReset={resetColumnSettings}
+            />
+          </>
+        }
       />
 
       {/* Create/Edit Dialog */}
@@ -776,6 +781,8 @@ export default function PromoCodesView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DevTools page="promo" />
     </div>
   )
 }

@@ -485,21 +485,6 @@ export default function KeysView() {
           </Button>
         )}
         <Button
-          variant="ghost"
-          size="icon"
-          onClick={refresh}
-          title={t('common.refresh', 'Refresh')}
-        >
-          <RefreshIcon className="h-5 w-5" />
-        </Button>
-        <ColumnSettings
-          columns={columnSettingItems}
-          columnOrder={columnOrder}
-          onColumnOrderChange={setColumnOrder}
-          onVisibilityChange={setColumnVisibility}
-          onReset={resetColumnSettings}
-        />
-        <Button
           onClick={() => {
             createForm.reset()
             setShowCreateDialog(true)
@@ -526,6 +511,20 @@ export default function KeysView() {
         renderRowActions={renderRowActions}
         actionsColumnSize={120}
         spreadsheetTitle="API Keys"
+        toolbar={
+          <>
+            <Button variant="ghost" size="icon-xs" onClick={refresh} title={t('common.refresh', 'Refresh')}>
+              <RefreshIcon className="h-4 w-4" />
+            </Button>
+            <ColumnSettings
+              columns={columnSettingItems}
+              columnOrder={columnOrder}
+              onColumnOrderChange={setColumnOrder}
+              onVisibilityChange={setColumnVisibility}
+              onReset={resetColumnSettings}
+            />
+          </>
+        }
       />
 
       {/* Create Dialog */}

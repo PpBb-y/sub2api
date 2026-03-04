@@ -288,9 +288,8 @@ export default function UsageView() {
         </div>
       )}
 
-      {/* Filters & Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-4">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-4">
           <Select
             value={selectedKeyId != null ? String(selectedKeyId) : 'all'}
             onValueChange={(v) => {
@@ -323,27 +322,6 @@ export default function UsageView() {
             presets={DASHBOARD_PRESETS}
             customRange={{ from: startDate, to: endDate }}
           />
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            onClick={exportCSV}
-            disabled={logs.length === 0}
-            className="flex items-center gap-2 text-sm"
-            title={t('usage.export', 'Export CSV')}
-          >
-            <DownloadIcon className="h-4 w-4" />
-            {t('usage.export', 'Export CSV')}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRefresh}
-            title={t('common.refresh', 'Refresh')}
-          >
-            <RefreshIcon className="h-5 w-5" />
-          </Button>
-        </div>
       </div>
 
       {/* Logs Table */}
@@ -360,6 +338,24 @@ export default function UsageView() {
         onPageChange={setPage}
         getRowId={(row) => String(row.id)}
         spreadsheetTitle="Usage Logs"
+        toolbar={
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={exportCSV}
+              disabled={logs.length === 0}
+              className="flex items-center gap-1 text-sm h-7 px-2"
+              title={t('usage.export', 'Export CSV')}
+            >
+              <DownloadIcon className="h-3.5 w-3.5" />
+              {t('usage.export', 'Export CSV')}
+            </Button>
+            <Button variant="ghost" size="icon-xs" onClick={handleRefresh} title={t('common.refresh', 'Refresh')}>
+              <RefreshIcon className="h-4 w-4" />
+            </Button>
+          </>
+        }
       />
     </div>
   )
