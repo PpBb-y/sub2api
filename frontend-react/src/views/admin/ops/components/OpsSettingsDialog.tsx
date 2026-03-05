@@ -13,6 +13,7 @@ import type {
   OpsAlertRuntimeSettings,
   EmailNotificationConfig,
   OpsAdvancedSettings,
+  AlertSeverity,
 } from '@/api/admin/ops'
 import {
   Dialog,
@@ -150,7 +151,7 @@ interface SettingsFormValues {
   // Alert Config
   alertEnabled: boolean
   alertRecipients: string[]
-  minSeverity: string
+  minSeverity: AlertSeverity | ''
   // Report Config
   reportEnabled: boolean
   reportRecipients: string[]
@@ -248,8 +249,8 @@ export function OpsSettingsDialog({ open, onOpenChange, onSaved }: Props) {
 
   // ==================== Form ====================
 
-  const form = useForm<SettingsFormValues>({
-    defaultValues: { ...DEFAULT_FORM_VALUES },
+  const form = useForm({
+    defaultValues: { ...DEFAULT_FORM_VALUES } satisfies SettingsFormValues,
     onSubmit: async ({ value }) => {
       // Validate
       const errors: string[] = []
@@ -401,7 +402,7 @@ export function OpsSettingsDialog({ open, onOpenChange, onSaved }: Props) {
         alert: {
           enabled: value.alertEnabled,
           recipients: value.alertRecipients,
-          min_severity: value.minSeverity || undefined,
+          min_severity: value.minSeverity || '',
           rate_limit_per_hour: emailData?.alert?.rate_limit_per_hour ?? 10,
           batching_window_seconds: emailData?.alert?.batching_window_seconds ?? 300,
           include_resolved_alerts: emailData?.alert?.include_resolved_alerts ?? false,
@@ -465,9 +466,6 @@ export function OpsSettingsDialog({ open, onOpenChange, onSaved }: Props) {
     },
   })
 
-  // Read form values for conditional rendering
-  const v = form.state.values
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] w-full flex-col sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl">
@@ -528,57 +526,73 @@ export function OpsSettingsDialog({ open, onOpenChange, onSaved }: Props) {
                   <div className="space-y-4">
                     <form.Field name="alertEnabled">
                       {(field) => (
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {t('admin.ops.settings.enableAlert')}
-                          </span>
-                          <Switch
-                            checked={field.state.value}
-                            onCheckedChange={field.handleChange}
-                          />
-                        </div>
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {t('admin.ops.settings.enableAlert')}
+                            </span>
+                            <Switch
+                              checked={field.state.value}
+                              onCheckedChange={field.handleChange}
+                            />
+                          </div>
+                          {field.state.value && (
+                            <>
+                              <form.Field name="alertRecipients">
+                                {(recipientsField) => (
+                                  <FieldRow
+                                    label={t('admin.ops.settings.alertRecipients')}
+                                    hint={t('admin.ops.settings.recipientsHint')}
+                                  >
+                                    <EmailChipInput
+                                      emails={recipientsField.state.value}
+                                      onChange={recipientsField.handleChange}
+                                      placeholder={t('admin.ops.settings.emailPlaceholder')}
+                                    />
+                                    {recipientsField.state.value.length === 0 && (
+                                      <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                                        <span>⚠</span>
+                                        {t('admin.ops.settings.alertRecipientsRequired', 'Alert is enabled but no recipient emails are configured. Please add at least one recipient.')}
+                                      </p>
+                                    )}
+                                  </FieldRow>
+                                )}
+                              </form.Field>
+                              <form.Field name="minSeverity">
+                                {(severityField) => (
+                                  <FieldRow label={t('admin.ops.settings.minSeverity')}>
+                                    <Select
+                                      value={severityField.state.value || 'all'}
+                                      onValueChange={(val) =>
+                                        severityField.handleChange(
+                                          (val === 'all' ? '' : val) as AlertSeverity | '',
+                                        )
+                                      }
+                                    >
+                                      <SelectTrigger className="h-8 w-40 text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="all">All</SelectItem>
+                                        <SelectItem value="critical">Critical</SelectItem>
+                                        <SelectItem value="warning">Warning</SelectItem>
+                                        <SelectItem value="info">Info</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    {!severityField.state.value && (
+                                      <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                                        <span>⚠</span>
+                                        {t('admin.ops.settings.minSeverityRequired', 'No minimum severity set. All alert levels will trigger notifications.')}
+                                      </p>
+                                    )}
+                                  </FieldRow>
+                                )}
+                              </form.Field>
+                            </>
+                          )}
+                        </>
                       )}
                     </form.Field>
-                    {v.alertEnabled && (
-                      <>
-                        <form.Field name="alertRecipients">
-                          {(field) => (
-                            <FieldRow
-                              label={t('admin.ops.settings.alertRecipients')}
-                              hint={t('admin.ops.settings.recipientsHint')}
-                            >
-                              <EmailChipInput
-                                emails={field.state.value}
-                                onChange={field.handleChange}
-                                placeholder={t('admin.ops.settings.emailPlaceholder')}
-                              />
-                            </FieldRow>
-                          )}
-                        </form.Field>
-                        <form.Field name="minSeverity">
-                          {(field) => (
-                            <FieldRow label={t('admin.ops.settings.minSeverity')}>
-                              <Select
-                                value={field.state.value || 'all'}
-                                onValueChange={(val) =>
-                                  field.handleChange(val === 'all' ? '' : val)
-                                }
-                              >
-                                <SelectTrigger className="h-8 w-40 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="all">All</SelectItem>
-                                  <SelectItem value="critical">Critical</SelectItem>
-                                  <SelectItem value="warning">Warning</SelectItem>
-                                  <SelectItem value="info">Info</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FieldRow>
-                          )}
-                        </form.Field>
-                      </>
-                    )}
                   </div>
                 </SectionCard>
 
@@ -587,90 +601,100 @@ export function OpsSettingsDialog({ open, onOpenChange, onSaved }: Props) {
                   <div className="space-y-4">
                     <form.Field name="reportEnabled">
                       {(field) => (
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {t('admin.ops.settings.enableReport')}
-                          </span>
-                          <Switch
-                            checked={field.state.value}
-                            onCheckedChange={field.handleChange}
-                          />
-                        </div>
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {t('admin.ops.settings.enableReport')}
+                            </span>
+                            <Switch
+                              checked={field.state.value}
+                              onCheckedChange={field.handleChange}
+                            />
+                          </div>
+                          {field.state.value && (
+                            <>
+                              <form.Field name="reportRecipients">
+                                {(recipientsField) => (
+                                  <FieldRow label={t('admin.ops.settings.reportRecipients')}>
+                                    <EmailChipInput
+                                      emails={recipientsField.state.value}
+                                      onChange={recipientsField.handleChange}
+                                      placeholder={t('admin.ops.settings.emailPlaceholder')}
+                                    />
+                                  </FieldRow>
+                                )}
+                              </form.Field>
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <form.Field name="dailySummaryEnabled">
+                                  {(dailyField) => (
+                                    <>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                          {t('admin.ops.settings.dailySummary')}
+                                        </span>
+                                        <Switch
+                                          checked={dailyField.state.value}
+                                          onCheckedChange={dailyField.handleChange}
+                                        />
+                                      </div>
+                                      {dailyField.state.value && (
+                                        <form.Field name="dailySummaryCron">
+                                          {(cronField) => (
+                                            <div>
+                                              <Input
+                                                className="h-8 font-mono text-xs"
+                                                value={cronField.state.value}
+                                                onChange={(e) =>
+                                                  cronField.handleChange(e.target.value)
+                                                }
+                                                onBlur={cronField.handleBlur}
+                                                placeholder="0 8 * * *"
+                                              />
+                                            </div>
+                                          )}
+                                        </form.Field>
+                                      )}
+                                    </>
+                                  )}
+                                </form.Field>
+                                <form.Field name="weeklySummaryEnabled">
+                                  {(weeklyField) => (
+                                    <>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                          {t('admin.ops.settings.weeklySummary')}
+                                        </span>
+                                        <Switch
+                                          checked={weeklyField.state.value}
+                                          onCheckedChange={weeklyField.handleChange}
+                                        />
+                                      </div>
+                                      {weeklyField.state.value && (
+                                        <form.Field name="weeklySummaryCron">
+                                          {(cronField) => (
+                                            <div>
+                                              <Input
+                                                className="h-8 font-mono text-xs"
+                                                value={cronField.state.value}
+                                                onChange={(e) =>
+                                                  cronField.handleChange(e.target.value)
+                                                }
+                                                onBlur={cronField.handleBlur}
+                                                placeholder="0 9 * * 1"
+                                              />
+                                            </div>
+                                          )}
+                                        </form.Field>
+                                      )}
+                                    </>
+                                  )}
+                                </form.Field>
+                              </div>
+                            </>
+                          )}
+                        </>
                       )}
                     </form.Field>
-                    {v.reportEnabled && (
-                      <>
-                        <form.Field name="reportRecipients">
-                          {(field) => (
-                            <FieldRow label={t('admin.ops.settings.reportRecipients')}>
-                              <EmailChipInput
-                                emails={field.state.value}
-                                onChange={field.handleChange}
-                                placeholder={t('admin.ops.settings.emailPlaceholder')}
-                              />
-                            </FieldRow>
-                          )}
-                        </form.Field>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <form.Field name="dailySummaryEnabled">
-                            {(field) => (
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                  {t('admin.ops.settings.dailySummary')}
-                                </span>
-                                <Switch
-                                  checked={field.state.value}
-                                  onCheckedChange={field.handleChange}
-                                />
-                              </div>
-                            )}
-                          </form.Field>
-                          {v.dailySummaryEnabled && (
-                            <form.Field name="dailySummaryCron">
-                              {(field) => (
-                                <div>
-                                  <Input
-                                    className="h-8 font-mono text-xs"
-                                    value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
-                                    onBlur={field.handleBlur}
-                                    placeholder="0 8 * * *"
-                                  />
-                                </div>
-                              )}
-                            </form.Field>
-                          )}
-                          <form.Field name="weeklySummaryEnabled">
-                            {(field) => (
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                  {t('admin.ops.settings.weeklySummary')}
-                                </span>
-                                <Switch
-                                  checked={field.state.value}
-                                  onCheckedChange={field.handleChange}
-                                />
-                              </div>
-                            )}
-                          </form.Field>
-                          {v.weeklySummaryEnabled && (
-                            <form.Field name="weeklySummaryCron">
-                              {(field) => (
-                                <div>
-                                  <Input
-                                    className="h-8 font-mono text-xs"
-                                    value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
-                                    onBlur={field.handleBlur}
-                                    placeholder="0 9 * * 1"
-                                  />
-                                </div>
-                              )}
-                            </form.Field>
-                          )}
-                        </div>
-                      </>
-                    )}
                   </div>
                 </SectionCard>
 
@@ -771,91 +795,91 @@ export function OpsSettingsDialog({ open, onOpenChange, onSaved }: Props) {
                       </h5>
                       <form.Field name="cleanupEnabled">
                         {(field) => (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              {t('admin.ops.settings.enableCleanup')}
-                            </span>
-                            <Switch
-                              checked={field.state.value}
-                              onCheckedChange={field.handleChange}
-                            />
-                          </div>
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {t('admin.ops.settings.enableCleanup')}
+                              </span>
+                              <Switch
+                                checked={field.state.value}
+                                onCheckedChange={field.handleChange}
+                              />
+                            </div>
+                            {field.state.value && (
+                              <form.Field name="cleanupSchedule">
+                                {(scheduleField) => (
+                                  <FieldRow
+                                    label={t('admin.ops.settings.cleanupSchedule')}
+                                    hint={t('admin.ops.settings.cleanupScheduleHint')}
+                                  >
+                                    <Input
+                                      className="h-8 font-mono text-xs"
+                                      value={scheduleField.state.value}
+                                      onChange={(e) => scheduleField.handleChange(e.target.value)}
+                                      onBlur={scheduleField.handleBlur}
+                                      placeholder="0 2 * * *"
+                                    />
+                                  </FieldRow>
+                                )}
+                              </form.Field>
+                            )}
+                          </>
                         )}
                       </form.Field>
-                      {v.cleanupEnabled && (
-                        <>
-                          <form.Field name="cleanupSchedule">
-                            {(field) => (
-                              <FieldRow
-                                label={t('admin.ops.settings.cleanupSchedule')}
-                                hint={t('admin.ops.settings.cleanupScheduleHint')}
-                              >
-                                <Input
-                                  className="h-8 font-mono text-xs"
-                                  value={field.state.value}
-                                  onChange={(e) => field.handleChange(e.target.value)}
-                                  onBlur={field.handleBlur}
-                                  placeholder="0 2 * * *"
-                                />
-                              </FieldRow>
-                            )}
-                          </form.Field>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <form.Field name="errorLogRetentionDays">
-                              {(field) => (
-                                <FieldRow label={t('admin.ops.settings.errorLogRetentionDays')}>
-                                  <Input
-                                    type="number"
-                                    min={1}
-                                    max={365}
-                                    className="h-8 text-xs"
-                                    value={field.state.value}
-                                    onChange={(e) => field.handleChange(Number(e.target.value))}
-                                    onBlur={field.handleBlur}
-                                  />
-                                </FieldRow>
-                              )}
-                            </form.Field>
-                            <form.Field name="minuteMetricsRetentionDays">
-                              {(field) => (
-                                <FieldRow
-                                  label={t('admin.ops.settings.minuteMetricsRetentionDays')}
-                                >
-                                  <Input
-                                    type="number"
-                                    min={1}
-                                    max={365}
-                                    className="h-8 text-xs"
-                                    value={field.state.value}
-                                    onChange={(e) => field.handleChange(Number(e.target.value))}
-                                    onBlur={field.handleBlur}
-                                  />
-                                </FieldRow>
-                              )}
-                            </form.Field>
-                            <form.Field name="hourlyMetricsRetentionDays">
-                              {(field) => (
-                                <FieldRow
-                                  label={t('admin.ops.settings.hourlyMetricsRetentionDays')}
-                                >
-                                  <Input
-                                    type="number"
-                                    min={1}
-                                    max={365}
-                                    className="h-8 text-xs"
-                                    value={field.state.value}
-                                    onChange={(e) => field.handleChange(Number(e.target.value))}
-                                    onBlur={field.handleBlur}
-                                  />
-                                </FieldRow>
-                              )}
-                            </form.Field>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {t('admin.ops.settings.retentionDaysHint')}
-                          </p>
-                        </>
-                      )}
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <form.Field name="errorLogRetentionDays">
+                          {(field) => (
+                            <FieldRow label={t('admin.ops.settings.errorLogRetentionDays')}>
+                              <Input
+                                type="number"
+                                min={1}
+                                max={365}
+                                className="h-8 text-xs"
+                                value={field.state.value}
+                                onChange={(e) => field.handleChange(Number(e.target.value))}
+                                onBlur={field.handleBlur}
+                              />
+                            </FieldRow>
+                          )}
+                        </form.Field>
+                        <form.Field name="minuteMetricsRetentionDays">
+                          {(field) => (
+                            <FieldRow
+                              label={t('admin.ops.settings.minuteMetricsRetentionDays')}
+                            >
+                              <Input
+                                type="number"
+                                min={1}
+                                max={365}
+                                className="h-8 text-xs"
+                                value={field.state.value}
+                                onChange={(e) => field.handleChange(Number(e.target.value))}
+                                onBlur={field.handleBlur}
+                              />
+                            </FieldRow>
+                          )}
+                        </form.Field>
+                        <form.Field name="hourlyMetricsRetentionDays">
+                          {(field) => (
+                            <FieldRow
+                              label={t('admin.ops.settings.hourlyMetricsRetentionDays')}
+                            >
+                              <Input
+                                type="number"
+                                min={1}
+                                max={365}
+                                className="h-8 text-xs"
+                                value={field.state.value}
+                                onChange={(e) => field.handleChange(Number(e.target.value))}
+                                onBlur={field.handleBlur}
+                              />
+                            </FieldRow>
+                          )}
+                        </form.Field>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {t('admin.ops.settings.retentionDaysHint')}
+                      </p>
                     </div>
 
                     {/* Aggregation */}
@@ -938,49 +962,53 @@ export function OpsSettingsDialog({ open, onOpenChange, onSaved }: Props) {
                       </h5>
                       <form.Field name="autoRefreshEnabled">
                         {(field) => (
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {t('admin.ops.settings.enableAutoRefresh')}
-                              </span>
-                              <p className="mt-1 text-xs text-gray-500">
-                                {t('admin.ops.settings.enableAutoRefreshHint')}
-                              </p>
+                          <>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  {t('admin.ops.settings.enableAutoRefresh')}
+                                </span>
+                                <p className="mt-1 text-xs text-gray-500">
+                                  {t('admin.ops.settings.enableAutoRefreshHint')}
+                                </p>
+                              </div>
+                              <Switch
+                                checked={field.state.value}
+                                onCheckedChange={field.handleChange}
+                              />
                             </div>
-                            <Switch
-                              checked={field.state.value}
-                              onCheckedChange={field.handleChange}
-                            />
-                          </div>
+                            {field.state.value && (
+                              <form.Field name="autoRefreshInterval">
+                                {(intervalField) => (
+                                  <FieldRow label={t('admin.ops.settings.refreshInterval')}>
+                                    <Select
+                                      value={String(intervalField.state.value)}
+                                      onValueChange={(val) =>
+                                        intervalField.handleChange(Number(val))
+                                      }
+                                    >
+                                      <SelectTrigger className="h-8 w-40 text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="15">
+                                          {t('admin.ops.settings.refreshInterval15s')}
+                                        </SelectItem>
+                                        <SelectItem value="30">
+                                          {t('admin.ops.settings.refreshInterval30s')}
+                                        </SelectItem>
+                                        <SelectItem value="60">
+                                          {t('admin.ops.settings.refreshInterval60s')}
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FieldRow>
+                                )}
+                              </form.Field>
+                            )}
+                          </>
                         )}
                       </form.Field>
-                      {v.autoRefreshEnabled && (
-                        <form.Field name="autoRefreshInterval">
-                          {(field) => (
-                            <FieldRow label={t('admin.ops.settings.refreshInterval')}>
-                              <Select
-                                value={String(field.state.value)}
-                                onValueChange={(val) => field.handleChange(Number(val))}
-                              >
-                                <SelectTrigger className="h-8 w-40 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="15">
-                                    {t('admin.ops.settings.refreshInterval15s')}
-                                  </SelectItem>
-                                  <SelectItem value="30">
-                                    {t('admin.ops.settings.refreshInterval30s')}
-                                  </SelectItem>
-                                  <SelectItem value="60">
-                                    {t('admin.ops.settings.refreshInterval60s')}
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FieldRow>
-                          )}
-                        </form.Field>
-                      )}
                     </div>
                   </div>
                 </details>
