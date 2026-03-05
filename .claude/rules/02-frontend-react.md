@@ -93,6 +93,40 @@ frontend-react/
 - UI 细节不要求完全相同，每个小的 UI 组件可以替换为更好的 React 生态库
 - 自定义功能优先在 React 前端开发
 
+## 国际化（i18n）对齐规范
+
+**每次完成一块功能开发后，必须检查中英文翻译是否与 Vue 版本一致。**
+
+### 检查流程
+
+1. 打开对应的 Vue 组件（`frontend/src/` 下同名或同功能文件）
+2. 找出所有用到的 i18n key（`$t('...')`）
+3. 对照 React 版本的 `frontend-react/src/i18n/locales/en.ts` 和 `zh.ts`，确认：
+   - key 是否存在
+   - 英文文案是否与 Vue 的 `frontend/src/locales/en.json`（或 `en.ts`）一致
+   - 中文文案是否与 Vue 的 `frontend/src/locales/zh.json`（或 `zh.ts`）一致
+4. 补全缺失 key，修正不一致的文案
+
+### i18next 插值语法
+
+i18next 默认使用 **双花括号** `{{variable}}`。locale 文件中必须写 `{{variable}}`，而非 `{variable}`（单花括号不会被替换，会原样显示）。
+
+```typescript
+// ✅ 正确
+rangeLabel: 'Window: {{range}}',
+rangeHours: '{{n}} hours',
+
+// ❌ 错误 — 单花括号不会被 i18next 替换
+rangeLabel: 'Window: {range}',
+rangeHours: '{n} hours',
+```
+
+在新增或修改含插值的翻译 key 时，务必检查使用的是双花括号。
+
+### 例外：已移除功能的翻译无需对齐
+
+参见本文件"Frontend React vs Vue Intentional Differences"章节，已剪裁功能的相关翻译 key 不需要添加。
+
 ## 已完成的重构（2026-02-28）
 
 1. ✅ @tanstack/react-table — 创建了 `DataTable` 通用组件 + `useDataTableQuery` / `useTableMutation` hooks，已迁移全部 9 个表格页面（8 个 admin + 1 个 user）
